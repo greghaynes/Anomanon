@@ -1,0 +1,4 @@
+SET(ANOMANON_SRCS
+	main.c)
+
+ADD_EXECUTABLE(anomanon ${ANOMANON_SRCS})

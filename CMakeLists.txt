@@ -1,0 +1,4 @@
+PROJECT(anomanon)
+
+ADD_SUBDIRECTORY(src)
+
