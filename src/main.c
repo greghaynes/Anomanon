@@ -97,13 +97,14 @@ int main(int argc, char **argv) {
 		RRD_DB,
 		"--step", record_interval_str,
 		"--start", epoch_str,
-		"DS:speed:COUNTER:2:U:U",
-		"RRA:AVERAGE:0.5:1:24",
+		"DS:speed:GAUGE:2:U:U",
+		"RRA:LAST:0.5:1:100",
 		0};
 	if(rrd_create(8, rrd_create_argv)) {
 		fprintf(stderr, "Couldn't create rrd database: %s\n:", rrd_get_error());
 		return 1;
 	}
+	printf("Creating rrd database at %s, at %s\n", RRD_DB, epoch_str);
 
 	// Main loop
 	const u_char *packet;
