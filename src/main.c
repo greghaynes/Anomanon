@@ -1,7 +1,17 @@
 #include <pcap.h>
 
+#include <signal.h>
 #include <unistd.h>
 #include <stdio.h>
+
+#define RECORD_INTERVAL 2
+
+static int _timeout_secs;
+
+void alarm_handler(int sig) {
+	_timeout_secs ++;
+	alarm(1);
+}
 
 void usage(int argc, char **argv) {
 	printf("Usage: %s -i <interface>\n", argv[0]);
@@ -40,7 +50,7 @@ int main(int argc, char **argv) {
 		mask = 0;
 	}
 
-	if_handle = pcap_open_live(interface, BUFSIZ, 1, 1000, errbuf);
+	if_handle = pcap_open_live(interface, BUFSIZ, 1, 100, errbuf);
 	if(!if_handle) {
 		fprintf(stderr, "Couldn't open device %s: %s\n", interface, errbuf);
 		return 1;
@@ -56,10 +66,26 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	signal(SIGALRM, alarm_handler);
+	alarm(1);
+
 	const u_char *packet;
 	struct pcap_pkthdr header;
-	packet = pcap_next(if_handle, &header);
-	printf("Jacked a packet with length of [%d]\n", header.len);
+	int keep_running = 1;
+	int packet_cnt = 0;
+	while(keep_running) {
+		packet = pcap_next(if_handle, &header);
+
+		if(header.len > 0)
+			packet_cnt++;
+
+		if(_timeout_secs >= RECORD_INTERVAL) {
+			printf("Got %d packets\n", packet_cnt);
+			_timeout_secs = 0;
+			packet_cnt = 0;
+		}
+	}
+
 	pcap_close(if_handle);
 
 	return 0;
