@@ -88,16 +88,19 @@ int main(int argc, char **argv) {
 	update_epoch_now();
 	char epoch_str[25];
 	sprintf(epoch_str, "%d", _epoch_now);
+	char record_interval_str[5];
+	sprintf(record_interval_str, "%d", RECORD_INTERVAL);
 
 	// Create rrd database
 	char *rrd_create_argv[] = {
 		"rrdcreate",
 		RRD_DB,
+		"--step", record_interval_str,
 		"--start", epoch_str,
-		"DS:speed:COUNTER:600:U:U",
+		"DS:speed:COUNTER:2:U:U",
 		"RRA:AVERAGE:0.5:1:24",
 		0};
-	if(rrd_create(6, rrd_create_argv)) {
+	if(rrd_create(8, rrd_create_argv)) {
 		fprintf(stderr, "Couldn't create rrd database: %s\n:", rrd_get_error());
 		return 1;
 	}
@@ -109,7 +112,7 @@ int main(int argc, char **argv) {
 	int packet_cnt = 0;
 	char rrd_update_str[50];
 	char *rrd_update_argv[] = {
-		"rrdupdate",
+		"update",
 		RRD_DB,
 		rrd_update_str,
 		0 };
@@ -128,7 +131,7 @@ int main(int argc, char **argv) {
 			sprintf(rrd_update_str, "%d:%d", _epoch_now, packet_cnt);
 			printf("Updating with %s\n", rrd_update_str);
 			if(rrd_update(3, rrd_update_argv)) {
-				fprintf(stderr, "Couldn't create rrd database: %s\n:", rrd_get_error());
+				fprintf(stderr, "Couldn't update rrd database: %s\n:", rrd_get_error());
 				return 1;
 			}
 
