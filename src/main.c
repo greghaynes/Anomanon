@@ -1,15 +1,29 @@
 #include <pcap.h>
+#include <rrd.h>
 
 #include <signal.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <sys/time.h>
 
 #define RECORD_INTERVAL 2
+#define RRD_DB "/tmp/anamanon_rrd.db"
 
 static int _timeout_secs;
+static int _epoch_now;
+
+void update_epoch_now(void) {
+	struct timeval t;
+	if(gettimeofday(&t, 0)) {
+		perror("Getting time of day");
+	} else {
+		_epoch_now = t.tv_sec;
+	}
+}
 
 void alarm_handler(int sig) {
-	_timeout_secs ++;
+	_timeout_secs++;
+	_epoch_now++;
 	alarm(1);
 }
 
@@ -66,21 +80,58 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
+	// Setup second counter
 	signal(SIGALRM, alarm_handler);
 	alarm(1);
 
+	// Update time
+	update_epoch_now();
+	char epoch_str[25];
+	sprintf(epoch_str, "%d", _epoch_now);
+
+	// Create rrd database
+	char *rrd_create_argv[] = {
+		"rrdcreate",
+		RRD_DB,
+		"--start", epoch_str,
+		"DS:speed:COUNTER:600:U:U",
+		"RRA:AVERAGE:0.5:1:24",
+		0};
+	if(rrd_create(6, rrd_create_argv)) {
+		fprintf(stderr, "Couldn't create rrd database: %s\n:", rrd_get_error());
+		return 1;
+	}
+
+	// Main loop
 	const u_char *packet;
 	struct pcap_pkthdr header;
 	int keep_running = 1;
 	int packet_cnt = 0;
+	char rrd_update_str[50];
+	char *rrd_update_argv[] = {
+		"rrdupdate",
+		RRD_DB,
+		rrd_update_str,
+		0 };
 	while(keep_running) {
+		// Grab packet
 		packet = pcap_next(if_handle, &header);
 
+		// Valid packet
 		if(header.len > 0)
 			packet_cnt++;
 
+		// Record interval
 		if(_timeout_secs >= RECORD_INTERVAL) {
+			update_epoch_now();
 			printf("Got %d packets\n", packet_cnt);
+			sprintf(rrd_update_str, "%d:%d", _epoch_now, packet_cnt);
+			printf("Updating with %s\n", rrd_update_str);
+			if(rrd_update(3, rrd_update_argv)) {
+				fprintf(stderr, "Couldn't create rrd database: %s\n:", rrd_get_error());
+				return 1;
+			}
+
 			_timeout_secs = 0;
 			packet_cnt = 0;
 		}
