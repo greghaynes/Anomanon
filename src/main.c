@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 		RRD_DB,
 		"--step", record_interval_str,
 		"--start", epoch_str,
-		"DS:speed:GAUGE:2:U:U",
+		"DS:speed:ABSOLUTE:2:U:U",
 		"RRA:LAST:0.5:1:100",
 		0};
 	if(rrd_create(8, rrd_create_argv)) {
