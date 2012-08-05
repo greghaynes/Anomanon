@@ -3,10 +3,13 @@
 
 #include <pthread.h>
 
+#include <sys/time.h>
+
 struct rrd_control_t {
 	unsigned int record_interval;
 	char *db_path;
 	pthread_t thread_id;
+	time_t next_update;
 };
 
 struct rrd_control_t *rrd_control_init(const char *db_path,

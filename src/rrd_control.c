@@ -1,4 +1,5 @@
 #include "rrd_control.h"
+#include "packet_cntr.h"
 
 #include <rrd.h>
 #include <stdlib.h>
@@ -6,8 +7,57 @@
 #include <errno.h>
 #include <stdio.h>
 
-void *rrd_control_main(void *arg) {
+int rrd_control_do_update(struct rrd_control_t *ctl) {
+	struct timeval cur_time;
+	
+	// Perform nanosleep
+	struct timeval next_update;
+	struct timeval sleep_len;
+	struct timespec nano_sleep_len;
+	next_update.tv_sec = ctl->next_update;
+	next_update.tv_usec = 0;
+	if(gettimeofday(&cur_time, 0) == -1) {
+		perror("Getting time of day");
+		return 1;
+	}
+
+	timersub(&next_update, &cur_time, &sleep_len);
+	nano_sleep_len.tv_sec = sleep_len.tv_sec;
+	nano_sleep_len.tv_nsec = sleep_len.tv_usec * 1000;
+	nanosleep(&nano_sleep_len, 0);
+	
+	// Get current time
+	if(gettimeofday(&cur_time, 0) == -1) {
+		perror("Getting time of day");
+		return 1;
+	}
+
+	// Set next update time
+	ctl->next_update = cur_time.tv_sec + ctl->record_interval;
+
+	// Do rrd_update
+	char rrd_update_str[50];
+	char *rrd_update_argv[] = {
+		"update",
+		0,
+		rrd_update_str,
+		0 };
+	rrd_update_argv[1] = ctl->db_path;
+	printf("Updating with %u packets\n", packet_cntr_get_cnt());
+	sprintf(rrd_update_str, "%u:%u", cur_time.tv_sec,
+	        packet_cntr_get_cnt());
+	packet_cntr_reset();
+	if(rrd_update(3, rrd_update_argv) == -1) {
+		fprintf(stderr, "Couldn't update rrd database: %s\n:", rrd_get_error());
+		return 1;
+	}
+
 	return 0;
+}
+
+void *rrd_control_main(void *arg) {
+	while(!rrd_control_do_update(arg));
+	printf("Done\n");
 }
 
 int rrd_control_start(struct rrd_control_t *ctl) {
@@ -18,6 +68,14 @@ int rrd_control_start(struct rrd_control_t *ctl) {
 		perror("Initializing rrd_control thread attrs:");
 		return -1;	
 	}
+
+	// Set initial next_update
+	struct timeval cur_time;
+	if(gettimeofday(&cur_time, 0)) {
+		perror("Getting time of day");
+		return;
+	}
+	ctl->next_update = cur_time.tv_sec + 1;
 
 	s = pthread_create(&ctl->thread_id, &attr, rrd_control_main, ctl);
 	if(s != 0) {
