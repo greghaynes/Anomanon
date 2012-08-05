@@ -43,7 +43,7 @@ int rrd_control_do_update(struct rrd_control_t *ctl) {
 		rrd_update_str,
 		0 };
 	rrd_update_argv[1] = ctl->db_path;
-	printf("Updating with %u packets\n", packet_cntr_get_cnt());
+	printf("Updating with %u packets at %u\n", packet_cntr_get_cnt(), cur_time.tv_sec);
 	sprintf(rrd_update_str, "%u:%u", cur_time.tv_sec,
 	        packet_cntr_get_cnt());
 	packet_cntr_reset();
@@ -87,9 +87,15 @@ int rrd_control_start(struct rrd_control_t *ctl) {
 }
 
 struct rrd_control_t *rrd_control_init(const char *db_path,
-                                       unsigned int record_interval) {
+                                       unsigned int record_interval,
+                                       unsigned int predict_size,
+                                       float alpha, float beta,
+                                       unsigned int season_records) {
 	char record_interval_str[25];
+	char hwpredict_str[50];
 	sprintf(record_interval_str, "%u", record_interval);
+	sprintf(hwpredict_str, "RRA:HWPREDICT:%u:%f:%f:%u", predict_size, alpha, beta, season_records);
+	printf("%s\n", hwpredict_str);
 
 	// Create rrd database
 	const char *rrd_create_argv[] = {
@@ -99,7 +105,7 @@ struct rrd_control_t *rrd_control_init(const char *db_path,
 		"--start", "n", // Start now
 		"DS:packets:COUNTER:1:U:U",
 		"RRA:AVERAGE:0.5:1:600",
-		"RRA:HWPREDICT:100:0.5:0.5:5",
+		hwpredict_str,
 		0};
 	if(rrd_create(9, (char**)rrd_create_argv)) {
 		fprintf(stderr, "Couldn't create rrd database: %s\n:", rrd_get_error());

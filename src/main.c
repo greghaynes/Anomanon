@@ -38,10 +38,12 @@ int main(int argc, char **argv) {
 	int interface_set = 0;
 	char *interface;
 	char *filter_exp = "";
+	float alpha = 0, beta = 0;
+	unsigned int season = 0;
 
 	int opterr = 0;
 	char c;
-	while((c = getopt (argc, argv, "i:q:")) != -1) {
+	while((c = getopt (argc, argv, "i:q:a:b:s:")) != -1) {
 		switch(c) {
 			case 'i':
 				interface_set = optarg ? 1 : 0;
@@ -49,6 +51,15 @@ int main(int argc, char **argv) {
 				break;
 			case 'q':
 				filter_exp = optarg;
+				break;
+			case 'a':
+				sscanf(optarg, "%f", &alpha);
+				break;
+			case 'b':
+				sscanf(optarg, "%f", &beta);
+				break;
+			case 's':
+				sscanf(optarg, "%d", &season);
 				break;
 		}
 	}
@@ -86,7 +97,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	struct rrd_control_t *rrd_ctl = rrd_control_init(RRD_DB, 1);
+	struct rrd_control_t *rrd_ctl = rrd_control_init(RRD_DB, 1, 100, alpha, beta, season);
 	rrd_control_start(rrd_ctl);
 
 	// Main loop
