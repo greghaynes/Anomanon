@@ -15,7 +15,7 @@
 static int _keep_running;
 
 void usage(int argc, char **argv) {
-	printf("Usage: %s -i <interface>\n", argv[0]);
+	printf("Usage: %s -i <interface>\n -a <alpha> -s <season> [-b <beta>] [-q <filter>]", argv[0]);
 }
 
 static char rrd_update_str[50];
