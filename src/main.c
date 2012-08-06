@@ -1,5 +1,5 @@
 #include "rrd_control.h"
-#include "packet_cntr.h"
+#include "packet_handler.h"
 
 #include <pcap.h>
 #include <rrd.h>
@@ -31,7 +31,7 @@ void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *pa
 
 	// Valid packet
 	if(packet)
-		packet_cntr_got_packet(header, packet);
+		packet_handler_got_packet(header, packet);
 }
 
 int main(int argc, char **argv) {

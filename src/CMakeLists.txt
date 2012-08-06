@@ -1,5 +1,5 @@
 SET(ANOMANON_SRCS
-	packet_cntr.c
+	packet_handler.c
 	rrd_control.c
 	main.c)
 

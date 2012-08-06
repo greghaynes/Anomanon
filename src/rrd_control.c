@@ -1,5 +1,5 @@
 #include "rrd_control.h"
-#include "packet_cntr.h"
+#include "packet_handler.h"
 
 #include <rrd.h>
 #include <stdlib.h>
@@ -43,10 +43,10 @@ int rrd_control_do_update(struct rrd_control_t *ctl) {
 		rrd_update_str,
 		0 };
 	rrd_update_argv[1] = ctl->db_path;
-	printf("Updating with %u packets at %u\n", packet_cntr_get_cnt(), cur_time.tv_sec);
-	sprintf(rrd_update_str, "%u:%u", cur_time.tv_sec,
-	        packet_cntr_get_cnt());
-	packet_cntr_reset();
+	printf("Updating with %u packets (%u size) at %u\n", packet_handler_get_cnt(), packet_handler_get_size(), cur_time.tv_sec);
+	sprintf(rrd_update_str, "%u:%u:%u", cur_time.tv_sec,
+	        packet_handler_get_cnt(), packet_handler_get_size());
+	//packet_handler_reset();
 	if(rrd_update(3, rrd_update_argv) == -1) {
 		fprintf(stderr, "Couldn't update rrd database: %s\n:", rrd_get_error());
 		return 1;
@@ -103,11 +103,12 @@ struct rrd_control_t *rrd_control_init(const char *db_path,
 		db_path,
 		"--step", record_interval_str,
 		"--start", "n", // Start now
-		"DS:packets:COUNTER:1:U:U",
+		"DS:packets:COUNTER:1:0:U",
+		"DS:size:COUNTER:1:0:U",
 		"RRA:AVERAGE:0.5:1:600",
 		hwpredict_str,
 		0};
-	if(rrd_create(9, (char**)rrd_create_argv)) {
+	if(rrd_create(10, (char**)rrd_create_argv)) {
 		fprintf(stderr, "Couldn't create rrd database: %s\n:", rrd_get_error());
 		return 0;
 	}
