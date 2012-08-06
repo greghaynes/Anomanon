@@ -57,6 +57,7 @@ int main(int argc, char **argv) {
 				break;
 			case 'o':
 				db_path = optarg;
+				break;
 		}
 	}
 
@@ -70,7 +71,6 @@ int main(int argc, char **argv) {
 	struct bpf_program bpf_prog;
 	bpf_u_int32 mask;
 	bpf_u_int32 net;
-
 	if(pcap_lookupnet(interface, &net, &mask, errbuf) == -1) {
 		fprintf(stderr, "Can't get netmask for device %s\n", interface);
 		net = 0;
@@ -90,10 +90,16 @@ int main(int argc, char **argv) {
 
 	if(pcap_setfilter(if_handle, &bpf_prog) == -1) {
 		fprintf(stderr, "Couldn't install filter %s: %s\n", filter_exp, pcap_geterr(if_handle));
+		pcap_close(if_handle);
 		return 1;
 	}
 
 	struct rrd_control_t *rrd_ctl = rrd_control_init(db_path, 1, HWPREDICT_ROWS, alpha, beta, season);
+	if(!rrd_ctl) {
+		pcap_close(if_handle);
+		return 1;
+	}
+
 	rrd_control_start(rrd_ctl);
 
 	// Main loop

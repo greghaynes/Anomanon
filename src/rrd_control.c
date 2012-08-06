@@ -105,7 +105,10 @@ struct rrd_control_t *rrd_control_init(const char *db_path,
 		"--start", "n", // Start now
 		"DS:packets:COUNTER:1:0:U",
 		"DS:size:COUNTER:1:0:U",
-		"RRA:AVERAGE:0.5:1:600",
+		"RRA:AVERAGE:0.5:1:86400",
+		"RRA:AVERAGE:0.5:7:86400",
+		"RRA:AVERAGE:0.5:217:86400",
+		"RRA:AVERAGE:0.5:79205:86400",
 		hwpredict_str,
 		0};
 	if(rrd_create(10, (char**)rrd_create_argv)) {
