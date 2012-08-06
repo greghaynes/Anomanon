@@ -111,7 +111,7 @@ struct rrd_control_t *rrd_control_init(const char *db_path,
 		"RRA:AVERAGE:0.5:79205:86400",
 		hwpredict_str,
 		0};
-	if(rrd_create(10, (char**)rrd_create_argv)) {
+	if(rrd_create(13, (char**)rrd_create_argv)) {
 		fprintf(stderr, "Couldn't create rrd database: %s\n:", rrd_get_error());
 		return 0;
 	}

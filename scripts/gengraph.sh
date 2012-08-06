@@ -1,4 +1,34 @@
 #!/bin/sh
+
+usage ()
+{
+	echo "$0 rrd_db out_image start_time source_vairable"
+}
+
+if [ -z $1 ]
+then
+	usage
+	exit
+fi
+
+if [ -z $2 ]
+then
+	usage
+	exit
+fi
+
+if [ -z $3 ]
+then
+	usage
+	exit
+fi
+
+if [ -z $4 ]
+then
+	usage
+	exit
+fi
+
 rrdtool graph $2 --start $3\
 	DEF:obs=$1:$4:AVERAGE \
 	DEF:pred=$1:$4:HWPREDICT \
