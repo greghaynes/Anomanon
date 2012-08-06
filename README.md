@@ -17,7 +17,7 @@ make
 Using
 -----
 <pre>
-./src/anomanon -i interface -a alpha -s season [-b beta] [-q filter]
+./src/anomanon -o db-location -i interface -a alpha -s season [-b beta] [-q filter]
 </pre>
 
 Aberrant Behavior Detection

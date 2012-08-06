@@ -10,20 +10,13 @@
 #include <sys/time.h>
 
 #define RECORD_INTERVAL 1
-#define RRD_DB "/tmp/anamanon_rrd.db"
+#define HWPREDICT_ROWS 600
 
 static int _keep_running;
 
 void usage(int argc, char **argv) {
-	printf("Usage: %s -i <interface>\n -a <alpha> -s <season> [-b <beta>] [-q <filter>]", argv[0]);
+	printf("Usage: %s -o <db_path> -i <interface>\n -a <alpha> -s <season> [-b <beta>] [-q <filter>]\n", argv[0]);
 }
-
-static char rrd_update_str[50];
-static char *rrd_update_argv[] = {
-	"update",
-	RRD_DB,
-	rrd_update_str,
-	0 };
 
 void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
 	int keep_running = 1;
@@ -40,10 +33,11 @@ int main(int argc, char **argv) {
 	char *filter_exp = "";
 	float alpha = 0, beta = 0;
 	unsigned int season = 0;
+	char *db_path = 0;
 
 	int opterr = 0;
 	char c;
-	while((c = getopt (argc, argv, "i:q:a:b:s:")) != -1) {
+	while((c = getopt (argc, argv, "i:q:a:b:s:o:")) != -1) {
 		switch(c) {
 			case 'i':
 				interface_set = optarg ? 1 : 0;
@@ -61,10 +55,12 @@ int main(int argc, char **argv) {
 			case 's':
 				sscanf(optarg, "%d", &season);
 				break;
+			case 'o':
+				db_path = optarg;
 		}
 	}
 
-	if(!interface_set) {
+	if(!interface_set || !db_path) {
 		usage(argc, argv);
 		return 1;
 	}
@@ -97,7 +93,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	struct rrd_control_t *rrd_ctl = rrd_control_init(RRD_DB, 1, 100, alpha, beta, season);
+	struct rrd_control_t *rrd_ctl = rrd_control_init(db_path, 1, HWPREDICT_ROWS, alpha, beta, season);
 	rrd_control_start(rrd_ctl);
 
 	// Main loop
