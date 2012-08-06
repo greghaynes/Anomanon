@@ -10,7 +10,6 @@
 #include <sys/time.h>
 
 #define RECORD_INTERVAL 1
-#define HWPREDICT_ROWS 600
 
 static int _keep_running;
 
@@ -94,7 +93,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	struct rrd_control_t *rrd_ctl = rrd_control_init(db_path, 1, HWPREDICT_ROWS, alpha, beta, season);
+	struct rrd_control_t *rrd_ctl = rrd_control_init(db_path, 1, alpha, beta, season);
 	if(!rrd_ctl) {
 		pcap_close(if_handle);
 		return 1;

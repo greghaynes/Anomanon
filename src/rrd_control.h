@@ -14,7 +14,6 @@ struct rrd_control_t {
 
 struct rrd_control_t *rrd_control_init(const char *db_path,
                                        unsigned int record_interval,
-                                       unsigned int predict_size,
                                        float alpha, float beta,
                                        unsigned int season_records);
 

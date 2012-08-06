@@ -88,13 +88,12 @@ int rrd_control_start(struct rrd_control_t *ctl) {
 
 struct rrd_control_t *rrd_control_init(const char *db_path,
                                        unsigned int record_interval,
-                                       unsigned int predict_size,
                                        float alpha, float beta,
                                        unsigned int season_records) {
 	char record_interval_str[25];
 	char hwpredict_str[50];
 	sprintf(record_interval_str, "%u", record_interval);
-	sprintf(hwpredict_str, "RRA:HWPREDICT:%u:%f:%f:%u", predict_size, alpha, beta, season_records);
+	sprintf(hwpredict_str, "RRA:HWPREDICT:%u:%f:%f:%u", 86400, alpha, beta, season_records);
 	printf("%s\n", hwpredict_str);
 
 	// Create rrd database
