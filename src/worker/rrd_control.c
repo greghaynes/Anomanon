@@ -43,8 +43,9 @@ int rrd_control_do_update(struct rrd_control_t *ctl) {
 		rrd_update_str,
 		0 };
 	rrd_update_argv[1] = ctl->db_path;
-	printf("Updating with %u packets (%u size) at %u\n", packet_handler_get_cnt(), packet_handler_get_size(), cur_time.tv_sec);
-	sprintf(rrd_update_str, "%u:%u:%u", cur_time.tv_sec,
+    unsigned int cur_time_sec = cur_time.tv_sec; // Silly printf type hack, woo POSIX!
+	printf("Updating with %u packets (%u size) at %u\n", packet_handler_get_cnt(), packet_handler_get_size(), cur_time_sec);
+	sprintf(rrd_update_str, "%u:%u:%u", cur_time_sec,
 	        packet_handler_get_cnt(), packet_handler_get_size());
 	//packet_handler_reset();
 	if(rrd_update(3, rrd_update_argv) == -1) {
