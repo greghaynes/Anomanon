@@ -1,6 +1,6 @@
 Anomanon
 ========
-Simple network filter with aberrant behavior detection.
+Network Aberrant behavior detection system
 
 License
 -------
@@ -26,3 +26,5 @@ rrdtool's Holt-Winters forecasting algorithm is used for anomalie detection.
 More information can be found at:
 http://oss.oetiker.ch/rrdtool/doc/rrdcreate.en.html
 
+Design
+------
